@@ -223,8 +223,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!TOKEN) return;
     setStatus('saving', '儲存中…');
     var payload = { tables: tables, poolSlots: poolSlots };
-    var data = encodeURIComponent(JSON.stringify(payload));
-    fetch(BASE_URL + '?action=saveSeatData&token=' + encodeURIComponent(TOKEN) + '&seat=' + data)
+    fetch(BASE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ token: TOKEN, action: 'saveSeatData', seat: payload })
+    })
     .then(function(){ setStatus('saved', '✓ 已儲存 ' + timeStr()); })
     .catch(function(e){ setStatus('error', '儲存失敗：' + e.message); });
   }
