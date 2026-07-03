@@ -109,17 +109,16 @@ input.seat { -webkit-appearance:none; appearance:none; }
 .save-status.error { color:#c0392b; }
 @media print {
   @page { size: A4 landscape; margin: 0; }
-  html, body { width:297mm; height:210mm; overflow:hidden; background:#fff; padding:0; margin:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-  body > *:not(.venue-wrap):not(h1):not(.sub):not(#coupleTitle) { display:none !important; }
+  html { height:210mm; overflow:hidden; }
+  body { width:297mm; height:210mm; overflow:hidden; background:#fff; padding:0; margin:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   .toolbar,.stat,.save-status,.mask,.hint-bar,.legend { display:none !important; }
-
-  /* 整個內容縮放進 A4 橫向 */
-  body {
+  #print-wrapper {
     transform-origin: top left;
-    transform: scale(0.62);
-    width: 160%;
+    transform: scale(0.58);
+    width: 172%;
+    position: absolute;
+    top: 0; left: 0;
   }
-
   h1 { font-size:16px; margin-bottom:1px; }
   .sub { font-size:9px; margin-bottom:1px; }
   #coupleTitle { font-size:10px; margin-bottom:3px; }
@@ -129,6 +128,7 @@ input.seat { -webkit-appearance:none; appearance:none; }
 </style>
 </head>
 <body>
+<div id="print-wrapper">
 <h1>婚宴座位表</h1>
 <div class="sub">美軍俱樂部 BRICK YARD 33⅓ × 想樂創意</div>
 <div class="sub" id="coupleTitle" style="font-size:12px;color:#888;margin-bottom:4px;"></div>
@@ -185,6 +185,7 @@ input.seat { -webkit-appearance:none; appearance:none; }
   </div>
 </div>
 
+</div><!-- /print-wrapper -->
 <!-- 彈窗 -->
 <div class="mask" id="mask">
   <div class="sheet">
