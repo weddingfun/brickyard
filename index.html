@@ -108,61 +108,47 @@ input.seat { -webkit-appearance:none; appearance:none; }
 .save-status.saved { color:#5A8A52; }
 .save-status.error { color:#c0392b; }
 @media print {
-  @page { size: A4 landscape; margin: 8mm; }
-  body { background:#fff; padding:0; margin:0; }
-  .toolbar,.stat,.save-status,.mask { display:none !important; }
-  .venue-wrap { box-shadow:none; padding:4px; overflow:visible; max-width:100%; }
-  .hint-bar { display:none !important; }
-  .legend { margin-bottom:4px; }
+  @page { size: A4 landscape; margin: 6mm; }
+  body { background:#fff; padding:0; margin:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .toolbar,.stat,.save-status,.mask,.hint-bar { display:none !important; }
+  .legend { margin-bottom:3px; font-size:7px; }
+  .venue-wrap { box-shadow:none; padding:3px; overflow:visible; max-width:100%; }
+  h1 { font-size:12px; margin-bottom:1px; }
+  .sub { font-size:7px; margin-bottom:1px; }
+  #coupleTitle { font-size:8px; margin-bottom:2px; }
 
-  /* 整體縮放 */
-  body > * { font-size:8px; }
-  h1 { font-size:13px; margin-bottom:1px; }
-  .sub { font-size:8px; margin-bottom:2px; }
-  #coupleTitle { font-size:9px; margin-bottom:2px; }
-
-  /* 場地佈局 */
-  .venue-layout { grid-template-columns:120px 1fr 120px; gap:4px; min-width:0; }
-  .side-col { gap:3px; }
-  .pool-zone { padding:4px; }
-  .pool-label { font-size:8px; margin-bottom:3px; padding:1px 0; }
-  .pool-grid { gap:3px; }
-  .pool-row { gap:3px; }
-  .stage-zone { padding:4px; margin-bottom:4px; }
-  .stage-row { gap:3px; }
-  .screen-bar { padding:3px; font-size:8px; letter-spacing:2px; }
-
-  /* 桌卡 */
+  .venue-layout { grid-template-columns:105px 1fr 105px; gap:3px; min-width:0; }
+  .side-col { gap:2px; }
   .hcard { min-width:0; }
-  .hcard .h-row { padding:1px 2px; gap:1px; }
-  .hcard .table-mid { padding:2px 3px; font-size:7px; }
+  .hcard .h-row { padding:1px; gap:1px; }
+  .hcard .table-mid { padding:1px 2px; font-size:6.5px; }
+
+  .pool-zone { padding:3px; }
+  .pool-label { font-size:7px; padding:1px 0; margin-bottom:2px; }
+  .pool-grid { gap:2px; }
+  .pool-row { gap:2px; }
   .vcard { min-width:0; }
-  .vcard .v-body { }
-  .vcard .v-seats { padding:2px 1px; gap:1px; }
-  .vcard .table-mid { min-width:14px; font-size:7px; }
-  .maincard { min-width:0; }
-  .maincard .m-seats { padding:3px 2px; }
-  .maincard .table-mid { padding:0 3px; font-size:8px; }
+  .vcard .v-seats { padding:1px; gap:1px; }
+  .vcard .table-mid { min-width:13px; font-size:6.5px; padding:0 2px; }
 
-  /* 座位格 */
-  .seat { font-size:7px; padding:2px 2px; min-height:14px; }
+  .stage-zone { padding:3px; margin-bottom:3px; }
+  .stage-row { gap:2px; }
+  .screen-bar { padding:2px; font-size:7px; letter-spacing:1px; }
+
+  .seat { font-size:6.5px; padding:1px 2px; min-height:12px; }
   .maincard .seat { font-size:8px; padding:3px 2px; }
-  .empty-cell { display:none; }
+  .maincard .table-mid { font-size:7px; padding:0 3px; }
+  .maincard .m-seats { padding:2px; }
+  .main-zone { padding:2px 0 1px; }
 
-  /* Bar 區 */
-  .bar-area { gap:2px; margin-top:3px; }
-  .bar-block { padding:2px; font-size:8px; }
-  .bar-bar { font-size:10px; }
-  .stair-box { padding:2px 4px; font-size:7px; }
-  .main-zone { padding:3px 0 1px; }
+  .bar-area { gap:2px; margin-top:2px; }
+  .bar-block { padding:2px; font-size:7px; letter-spacing:0; }
+  .bar-bar { font-size:9px; }
+  .stair-box { padding:2px 3px; font-size:6.5px; }
 
-  /* 底部 */
-  .bottom-row { margin-top:4px; }
-  .buffet-box { padding:3px 8px; font-size:8px; }
-
-  /* 強制單頁 */
-  .venue-wrap { page-break-after:avoid; }
-  * { page-break-inside:avoid; }
+  .bottom-row { margin-top:3px; }
+  .buffet-box { padding:2px 6px; font-size:7px; }
+  .empty-cell { display:none !important; }
 }
 </style>
 </head>
