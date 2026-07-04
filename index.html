@@ -21,9 +21,13 @@ h1 { font-size:16px; letter-spacing:2px; text-align:center; margin-bottom:2px; }
 .venue-wrap { max-width:1100px; margin:0 auto; background:#fff; border-radius:10px; padding:12px; box-shadow:0 2px 12px rgba(0,0,0,.08); overflow-x:auto; }
 .screen-bar { text-align:center; font-size:10px; background:#1a1a1a; color:#fff; border-radius:6px 6px 0 0; padding:7px; letter-spacing:4px; margin-bottom:0; }
 .stage-zone { background:#E8E8E8; border:2px solid #1a1a1a; border-top:none; border-radius:0 0 6px 6px; padding:8px; margin-bottom:8px; }
-.stage-row { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; }
+.stage-row { display:flex; gap:4px; justify-content:center; flex-wrap:nowrap; overflow-x:auto; min-width:0; }
+.stage-row .hcard { min-width:0; flex:1; max-width:200px; }
 .venue-layout { display:grid; grid-template-columns:170px 1fr 170px; gap:8px; min-width:680px; }
 .side-col { display:flex; flex-direction:column; gap:5px; }
+.highchair-zone { background:#FFF8E6; border:2.5px solid #D4A017; border-radius:8px; padding:8px; display:flex; flex-direction:column; gap:5px; }
+.highchair-top-label { text-align:center; font-size:9px; font-weight:700; color:#8a5e00; background:#fff; border:1.5px solid #D4A017; border-radius:4px; padding:3px 0; letter-spacing:1px; }
+.left-col-wrap { display:flex; flex-direction:column; gap:5px; }
 .center-col { display:flex; flex-direction:column; gap:6px; }
 .pool-zone { background:#E8F2E4; border:2.5px solid #5A8A52; border-radius:8px; padding:8px; }
 .pool-label { text-align:center; font-size:10px; font-weight:700; color:#3d6636; letter-spacing:2px; margin-bottom:6px; background:#fff; border:1.5px solid #5A8A52; border-radius:4px; padding:2px 0; }
@@ -145,13 +149,13 @@ input.seat { -webkit-appearance:none; appearance:none; }
 </div>
 <div class="stat">座位數 <b id="totalcap">0</b> 位（含新人 <b id="maincap">0</b> 位）　已排 <b id="seated">0</b> 人　素 <b id="vegc">0</b>　童 <b id="kidc">0</b>　共 <b id="tablec">0</b> 桌</div>
 <div style="text-align:center;font-size:11px;color:#666;margin-bottom:6px;background:#fff8e8;border:1px solid #e8d88a;border-radius:6px;padding:6px 12px;">
-  📝 點選座位格直接輸入姓名　·　<b>右鍵</b>可標記素食 🌿 或兒童椅 🪑　·　點選<b>桌號</b>可編輯桌次名稱及刪除桌次
+  📝 點選座位格直接輸入姓名　·　<b>右鍵（手機長按）</b>可標記素食 🌿 或兒童椅 🪑　·　點選<b>桌號</b>可編輯桌次名稱及刪除桌次
 </div>
 <div class="legend">
   <div class="leg"><div class="leg-box" style="background:#E8E2D9;border-color:#999;"></div>已填</div>
   <div class="leg"><div class="leg-box" style="background:#D4EDCC;border-color:#5a9a4a;"></div>素食</div>
-  <div class="leg"><div class="leg-box" style="background:#FCE8CF;border-color:#c08040;"></div>兒童</div>
-  <div class="leg"><div class="leg-box" style="background:#E8F2E4;border-color:#5A8A52;"></div>下沉區</div>
+  <div class="leg"><div class="leg-box" style="background:#FCE8CF;border-color:#c08040;"></div>兒童椅</div>
+  <div class="leg"><div class="leg-box" style="background:#E8F2E4;border-color:#5A8A52;"></div>水池區</div>
 </div>
 
 <div class="venue-wrap">
@@ -160,10 +164,15 @@ input.seat { -webkit-appearance:none; appearance:none; }
     <div class="stage-row" id="stageRow"></div>
   </div>
   <div class="venue-layout">
-    <div class="side-col" id="leftCol"></div>
+    <div class="left-col-wrap">
+      <div class="highchair-zone">
+      <div class="highchair-top-label">🪑 高腳椅區・兒童椅不適合此區</div>
+      <div class="side-col" id="leftCol"></div>
+    </div>
+    </div>
     <div class="center-col">
       <div class="pool-zone">
-        <div class="pool-label">▼ 下 沉 區 ▼</div>
+        <div class="pool-label">▼ 水 池 區 ▼</div>
         <div class="pool-grid" id="poolGrid"></div>
         <div class="main-zone" id="mainZone"></div>
         <div class="bar-area">
@@ -327,6 +336,27 @@ document.addEventListener('DOMContentLoaded', function () {
       e.preventDefault(); e.stopPropagation();
       showTagMenu(e, s, inp, seatLabels(t.type, idx));
     };
+    var _pressTimer = null;
+    inp.addEventListener('touchstart', function(e){
+      _pressTimer = setTimeout(function(){
+        var touch = e.touches[0];
+        showTagMenu({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: function(){}, stopPropagation: function(){} }, s, inp, seatLabels(t.type, idx));
+      }, 600);
+    }, { passive: true });
+    inp.addEventListener('touchend', function(){ clearTimeout(_pressTimer); }, { passive: true });
+    inp.addEventListener('touchmove', function(){ clearTimeout(_pressTimer); }, { passive: true });
+    // 手機長按
+    var pressTimer = null;
+    var touchX = 0, touchY = 0;
+    inp.addEventListener('touchstart', function(e){
+      touchX = e.touches[0].clientX;
+      touchY = e.touches[0].clientY;
+      pressTimer = setTimeout(function(){
+        showTagMenu({ clientX: touchX, clientY: touchY }, s, inp, seatLabels(t.type, idx));
+      }, 600);
+    }, { passive: true });
+    inp.addEventListener('touchend', function(){ clearTimeout(pressTimer); });
+    inp.addEventListener('touchmove', function(){ clearTimeout(pressTimer); });
     return inp;
   }
 
@@ -353,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return b;
     }
     menu.appendChild(mkItem('素食', s.veg, function(){ s.veg=!s.veg; if(s.veg)s.kid=false; }));
-    menu.appendChild(mkItem('兒童', s.kid, function(){ s.kid=!s.kid; if(s.kid)s.veg=false; }));
+    menu.appendChild(mkItem('兒童椅', s.kid, function(){ s.kid=!s.kid; if(s.kid)s.veg=false; }));
     var sep=document.createElement('hr'); sep.style.cssText='border:none;border-top:1px solid #eee;margin:2px 0;'; menu.appendChild(sep);
     var clr=document.createElement('button');
     clr.style.cssText='border:1px solid #ddd;border-radius:5px;padding:5px 8px;cursor:pointer;text-align:left;background:#fff;color:#c0392b;';
@@ -474,7 +504,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 找第一個空格位（跳過10）
     var slot=-1;
     for(var s=0;s<12;s++){ if(s===10) continue; if(poolSlots[s]===null){slot=s;break;} }
-    if(slot<0){ alert('下沉區已達最大桌數'); return; }
+    if(slot<0){ alert('水池區已達最大桌數'); return; }
     var label = prompt('桌名稱', (countZone('pool')+13)+'桌');
     if (label===null) return;
     var t = addTable('pool','v', label||'新桌', slot);
