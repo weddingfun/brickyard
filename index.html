@@ -120,17 +120,16 @@ input.seat { -webkit-appearance:none; appearance:none; }
 .save-status.saved { color:#5A8A52; }
 .save-status.error { color:#c0392b; }
 @media print {
-  @page { size: A4 landscape; margin: 0; }
+  @page { size: A4 landscape; margin: 5mm; }
   html, body { margin:0; padding:0; background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-  .toolbar,.stat,.save-status,.mask,.hint-bar,.legend,.hint-bar { display:none !important; }
+  .toolbar,.stat,.save-status,.mask,.hint-bar,.legend { display:none !important; }
   #print-wrapper {
     transform-origin: top left;
-    transform: scale(0.52);
-    width: 192%;
-    position: absolute;
-    top: 0; left: 0;
+    transform: scale(0.55);
+    width: 182%;
+    margin-bottom: -45%;
   }
-  .venue-layout { grid-template-columns:280px 1fr 280px; gap:6px; }
+  .venue-layout { grid-template-columns:240px 1fr 240px; gap:6px; }
   .hcard { min-width:0; }
   .vcard { min-width:0; }
   h1 { font-size:16px; margin-bottom:1px; }
@@ -139,8 +138,6 @@ input.seat { -webkit-appearance:none; appearance:none; }
   .venue-wrap { box-shadow:none; padding:6px; max-width:100%; }
   .empty-cell { display:none !important; }
   body.place-empty .seat.empty-s::after { content:"　"; display:block; }
-  /* 確保底部區塊不換頁 */
-  .bottom-row, .av-bar { page-break-inside:avoid; break-inside:avoid; }
 }
 </style>
 </head>
