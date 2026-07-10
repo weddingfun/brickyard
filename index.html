@@ -137,6 +137,7 @@ input.seat { -webkit-appearance:none; appearance:none; }
   #coupleTitle { font-size:10px; margin-bottom:3px; }
   .venue-wrap { box-shadow:none; padding:6px; max-width:100%; }
   .empty-cell { display:none !important; }
+  body.place-empty .seat.empty-s::after { content:"　"; display:block; }
 }
 </style>
 </head>
@@ -153,7 +154,12 @@ input.seat { -webkit-appearance:none; appearance:none; }
   <button class="btn ghost" id="clearBtn">清除姓名</button>
   <button class="btn" id="printBtn">列印 / PDF</button>
 </div>
-<div class="stat">座位數 <b id="totalcap">0</b> 位（含新人 <b id="maincap">0</b> 位）　已排 <b id="seated">0</b> 人　素 <b id="vegc">0</b>　童 <b id="kidc">0</b>　共 <b id="tablec">0</b> 桌</div>
+<div style="text-align:center;margin-bottom:6px;font-size:13px;">
+  空位是否擺放餐具：
+  <label style="margin:0 8px;cursor:pointer;"><input type="radio" name="emptyPlace" id="ep_yes" value="yes"> 擺</label>
+  <label style="cursor:pointer;"><input type="radio" name="emptyPlace" id="ep_no" value="no" checked> 不擺</label>
+</div>
+<div class="stat">座位數 <b id="totalcap">0</b> 位（含新人 <b id="maincap">0</b> 位）　已排 <b id="seated">0</b> 人　空 <b id="emptyc">0</b>　素 <b id="vegc">0</b>　童 <b id="kidc">0</b>　共 <b id="tablec">0</b> 桌</div>
 <div style="text-align:center;font-size:11px;color:#666;margin-bottom:6px;background:#fff8e8;border:1px solid #e8d88a;border-radius:6px;padding:6px 12px;">
   📝 點選座位格直接輸入姓名　·　<b>右鍵（手機長按）</b>可標記素食 🌿、兒童椅 🪑 或協助送餐 🍽️　·　點選<b>桌號</b>可編輯桌次名稱及刪除桌次
 </div>
@@ -738,6 +744,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('totalcap').textContent=totalcap;
     document.getElementById('maincap').textContent=maincap;
     document.getElementById('seated').textContent=seated;
+    var ec=document.getElementById('emptyc'); if(ec) ec.textContent=empty;
     document.getElementById('vegc').textContent=veg;
     document.getElementById('kidc').textContent=kid;
     document.getElementById('tablec').textContent=tables.length;
