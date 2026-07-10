@@ -125,11 +125,8 @@ input.seat { -webkit-appearance:none; appearance:none; }
   .toolbar,.stat,.save-status,.mask,.hint-bar,.legend { display:none !important; }
   #print-wrapper {
     transform-origin: top left;
-    transform: scale(0.55);
-    width: 182%;
-    margin-bottom: -45%;
   }
-  .venue-layout { grid-template-columns:240px 1fr 240px; gap:6px; }
+  .venue-layout { grid-template-columns:1fr 2fr 1fr; gap:6px; }
   .hcard { min-width:0; }
   .vcard { min-width:0; }
   h1 { font-size:16px; margin-bottom:1px; }
@@ -779,7 +776,28 @@ document.addEventListener('DOMContentLoaded', function () {
     tables.forEach(function(t){t.seats.forEach(function(s){s.name='';s.veg=false;s.kid=false;s.help=false;});});
     render();
   };
-  document.getElementById('printBtn').onclick=function(){ window.print(); };
+  document.getElementById('printBtn').onclick=function(){
+    var ep = document.querySelector('input[name="emptyPlace"]:checked');
+    if (ep && ep.value === 'yes') document.body.classList.add('place-empty');
+    else document.body.classList.remove('place-empty');
+    var wrapper = document.getElementById('print-wrapper');
+    wrapper.style.transform = 'none';
+    var W = wrapper.scrollWidth;
+    var H = wrapper.scrollHeight;
+    var scaleW = 1085 / W;
+    var scaleH = 756 / H;
+    var scale = Math.min(scaleW, scaleH, 1);
+    wrapper.style.transformOrigin = 'top left';
+    wrapper.style.transform = 'scale(' + scale + ')';
+    wrapper.style.width = (100 / scale) + '%';
+    wrapper.style.marginBottom = '-' + Math.round(H * (1 - scale)) + 'px';
+    window.print();
+    setTimeout(function(){
+      wrapper.style.transform = '';
+      wrapper.style.width = '';
+      wrapper.style.marginBottom = '';
+    }, 500);
+  };
 
   function updateStat(){
     var seated=0,veg=0,kid=0,totalcap=0,maincap=0,empty=0;
