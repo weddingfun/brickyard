@@ -124,14 +124,13 @@ input.seat { -webkit-appearance:none; appearance:none; }
   html, body { margin:0; padding:0; background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   .toolbar,.stat,.save-status,.mask,.hint-bar,.legend { display:none !important; }
   #print-wrapper {
-    transform-origin: top left;
+    zoom: 0.6;
   }
   .venue-layout { grid-template-columns:1fr 2fr 1fr; gap:6px; }
   .hcard { min-width:0; }
   .vcard { min-width:0; }
-  h1 { font-size:18px; margin-bottom:2px; }
-  .sub { font-size:9px; margin-bottom:1px; }
-  #coupleTitle { font-size:15px; font-weight:700; color:#1a1a1a; margin-bottom:4px; }
+  #coupleTitle { font-size:22px !important; font-weight:800 !important; }
+  #weddingInfo { font-size:13px !important; }
   .venue-wrap { box-shadow:none; padding:6px; max-width:100%; }
   .empty-cell { display:none !important; }
   body.place-empty .seat.empty-s::after { content:"　"; display:block; }
@@ -140,9 +139,12 @@ input.seat { -webkit-appearance:none; appearance:none; }
 </head>
 <body>
 <div id="print-wrapper">
-<h1>婚宴座位表</h1>
-<div class="sub">美軍俱樂部 BRICK YARD 33⅓ × 想樂創意</div>
-<div id="coupleTitle" style="text-align:center;font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:4px;letter-spacing:1px;"></div>
+<div style="text-align:center;margin-bottom:6px;border-bottom:2px solid #1a1a1a;padding-bottom:6px;">
+  <div style="font-size:11px;color:#888;letter-spacing:2px;margin-bottom:2px">美軍俱樂部 BRICK YARD 33⅓ × 想樂創意</div>
+  <div id="coupleTitle" style="font-size:28px;font-weight:800;color:#1a1a1a;letter-spacing:2px;margin-bottom:2px;line-height:1.2"></div>
+  <div id="weddingInfo" style="font-size:16px;font-weight:600;color:#333;letter-spacing:2px"></div>
+  <h1 style="font-size:13px;font-weight:400;color:#999;letter-spacing:4px;margin:2px 0 0">婚 宴 座 位 表</h1>
+</div>
 <div class="save-status" id="saveStatus"></div>
 <div class="toolbar">
   <button class="btn ghost" id="addPoolBtn">＋ 水池桌</button>
@@ -780,19 +782,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var ep = document.querySelector('input[name="emptyPlace"]:checked');
     if (ep && ep.value === 'yes') document.body.classList.add('place-empty');
     else document.body.classList.remove('place-empty');
-    var wrapper = document.getElementById('print-wrapper');
-    wrapper.style.zoom = '';
-    var W = wrapper.offsetWidth;
-    var H = wrapper.offsetHeight;
-    // A4 橫向可用：287mm×200mm ≈ 1085×756px
-    var scaleW = 1085 / W;
-    var scaleH = 756 / H;
-    var scale = Math.min(scaleW, scaleH, 1);
-    wrapper.style.zoom = scale;
     window.print();
-    setTimeout(function(){
-      wrapper.style.zoom = '';
-    }, 1000);
   };
 
   function updateStat(){
@@ -822,7 +812,9 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(function(data){
         if (data && data.order && data.order.groomName) {
           document.getElementById('coupleTitle').textContent =
-            data.order.groomName + ' & ' + data.order.brideName + '　' + (data.order.weddingDate || '');
+            data.order.groomName + ' & ' + data.order.brideName;
+          var wi = document.getElementById('weddingInfo');
+          if (wi) wi.textContent = (data.order.weddingDate || '') + '　' + (data.order.mealSession || '');
         }
         if (data && data.seat && data.seat.tables && data.seat.tables.length > 0) {
           tables = [];
