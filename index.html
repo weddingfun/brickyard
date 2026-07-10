@@ -129,8 +129,7 @@ input.seat { -webkit-appearance:none; appearance:none; }
   .venue-layout { grid-template-columns:1fr 2fr 1fr; gap:6px; }
   .hcard { min-width:0; }
   .vcard { min-width:0; }
-  #coupleTitle { font-size:22px !important; font-weight:800 !important; }
-  #weddingInfo { font-size:13px !important; }
+  #coupleTitle, #weddingDate, #mealSession { font-size:18px !important; font-weight:800 !important; }
   .venue-wrap { box-shadow:none; padding:6px; max-width:100%; }
   .empty-cell { display:none !important; }
   body.place-empty .seat.empty-s::after { content:"　"; display:block; }
@@ -140,10 +139,12 @@ input.seat { -webkit-appearance:none; appearance:none; }
 <body>
 <div id="print-wrapper">
 <div style="text-align:center;margin-bottom:6px;border-bottom:2px solid #1a1a1a;padding-bottom:6px;">
-  <div style="font-size:11px;color:#888;letter-spacing:2px;margin-bottom:2px">美軍俱樂部 BRICK YARD 33⅓ × 想樂創意</div>
-  <div id="coupleTitle" style="font-size:28px;font-weight:800;color:#1a1a1a;letter-spacing:2px;margin-bottom:2px;line-height:1.2"></div>
-  <div id="weddingInfo" style="font-size:16px;font-weight:600;color:#333;letter-spacing:2px"></div>
-  <h1 style="font-size:13px;font-weight:400;color:#999;letter-spacing:4px;margin:2px 0 0">婚 宴 座 位 表</h1>
+  <div style="font-size:11px;color:#888;letter-spacing:2px;margin-bottom:4px">美軍俱樂部 BRICK YARD 33⅓ × 想樂創意　婚 宴 座 位 表</div>
+  <div style="display:flex;justify-content:center;align-items:baseline;gap:20px">
+    <div id="weddingDate" style="font-size:28px;font-weight:800;color:#1a1a1a;letter-spacing:2px;line-height:1.2"></div>
+    <div id="mealSession" style="font-size:28px;font-weight:800;color:#1a1a1a;letter-spacing:2px;line-height:1.2"></div>
+    <div id="coupleTitle" style="font-size:28px;font-weight:800;color:#1a1a1a;letter-spacing:2px;line-height:1.2"></div>
+  </div>
 </div>
 <div class="save-status" id="saveStatus"></div>
 <div class="toolbar">
@@ -813,8 +814,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (data && data.order && data.order.groomName) {
           document.getElementById('coupleTitle').textContent =
             data.order.groomName + ' & ' + data.order.brideName;
-          var wi = document.getElementById('weddingInfo');
-          if (wi) wi.textContent = (data.order.weddingDate || '') + '　' + (data.order.mealSession || '');
+          var wd = document.getElementById('weddingDate');
+          if (wd) wd.textContent = data.order.weddingDate || '';
+          var ms = document.getElementById('mealSession');
+          if (ms) ms.textContent = data.order.mealSession || '';
         }
         if (data && data.seat && data.seat.tables && data.seat.tables.length > 0) {
           tables = [];
