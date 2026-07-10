@@ -215,6 +215,10 @@ input.seat { -webkit-appearance:none; appearance:none; }
       <input type="text" id="tableNameInput" placeholder="自訂桌名">
     </div>
     <div id="seatList"></div>
+    <div id="endSeatOptions" style="margin-top:10px;display:none;border-top:1px solid #eee;padding-top:10px;">
+      <div style="font-size:12px;color:#666;margin-bottom:6px;">側邊椅（在桌子短邊加一張椅子）</div>
+      <div id="endSeatBtns" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+    </div>
     <div class="sheet-footer">
       <button class="btn ghost" id="cancelBtn">取消</button>
       <button class="btn" id="saveBtn">儲存</button>
@@ -412,9 +416,14 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // 橫桌：上排3｜桌名（橫書）｜下排3，垂直堆疊
-  function makeHCard(t) {
+  function makeHCard(t, opts) {
+    opts = opts || {};
     var div = document.createElement('div');
     div.className = 'tcard hcard';
+    // 短邊椅（左側）
+    if (t.endSeats && t.endSeats.left !== undefined) {
+      div.appendChild(makeEndSeat(t, 'left'));
+    }
     // 上排3
     var topRow = document.createElement('div'); topRow.className = 'h-row';
     for (var i=0;i<3;i++) topRow.appendChild(makeSeat(t,i));
@@ -426,6 +435,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var botRow = document.createElement('div'); botRow.className = 'h-row';
     for (var i=3;i<6;i++) botRow.appendChild(makeSeat(t,i));
     div.appendChild(topRow); div.appendChild(mid); div.appendChild(botRow);
+    // 短邊椅（右側）
+    if (t.endSeats && t.endSeats.right !== undefined) {
+      div.appendChild(makeEndSeat(t, 'right'));
+    }
     return div;
   }
 
@@ -434,10 +447,9 @@ document.addEventListener('DOMContentLoaded', function () {
     opts = opts || {};
     var div = document.createElement('div');
     div.className = 'tcard vcard';
-    // 端椅（上方）
-    if (opts.endTop) {
-      var ew = makeEndSeat(t, 'top');
-      div.appendChild(ew);
+    // 短邊椅（上方），只在 endSeats.top 存在時顯示
+    if (t.endSeats && t.endSeats.top !== undefined) {
+      div.appendChild(makeEndSeat(t, 'top'));
     }
     var body = document.createElement('div');
     body.className = 'v-body';
@@ -448,11 +460,13 @@ document.addEventListener('DOMContentLoaded', function () {
     for (var i=3;i<6;i++) rc.appendChild(makeSeat(t,i));
     body.appendChild(lc); body.appendChild(mid); body.appendChild(rc);
     div.appendChild(body);
-    // 端椅（下方）
-    if (opts.endBot) {
-      var ew2 = makeEndSeat(t, 'bot');
-      div.appendChild(ew2);
+    // 短邊椅（下方），只在 endSeats.bot 存在時顯示
+    if (t.endSeats && t.endSeats.bot !== undefined) {
+      div.appendChild(makeEndSeat(t, 'bot'));
     }
+    // 側邊椅（橫桌用左右欄式）
+    if (opts.endTop) { div.insertBefore(makeEndSeat(t,'top'), div.firstChild); }
+    if (opts.endBot) { div.appendChild(makeEndSeat(t,'bot')); }
     return div;
   }
 
@@ -477,13 +491,13 @@ document.addEventListener('DOMContentLoaded', function () {
     inp.onkeydown = function(e){ if(e.key==='Enter'&&!composing2) inp.blur(); };
     inp.oncontextmenu = function(e){
       e.preventDefault(); e.stopPropagation();
-      showTagMenu(e, s, inp, pos==='top'?'▲端':'▼端');
+      showTagMenu(e, s, inp, pos==='top'?'▲側邊':'▼側邊');
     };
     var _pt=null;
     inp.addEventListener('touchstart', function(e){
       _pt=setTimeout(function(){
         var tc=e.touches[0];
-        showTagMenu({clientX:tc.clientX,clientY:tc.clientY,preventDefault:function(){},stopPropagation:function(){}},s,inp,pos==='top'?'▲端':'▼端');
+        showTagMenu({clientX:tc.clientX,clientY:tc.clientY,preventDefault:function(){},stopPropagation:function(){}},s,inp,pos==='top'?'▲側邊':'▼側邊');
       },600);
     },{passive:true});
     inp.addEventListener('touchend',function(){clearTimeout(_pt);},{passive:true});
@@ -514,7 +528,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 右側
     var rc = document.getElementById('rightCol'); rc.innerHTML='';
-    tables.filter(function(t){return t.zone==='right';}).forEach(function(t){ rc.appendChild(makeHCard(t)); });
+    tables.filter(function(t){return t.zone==='right';}).forEach(function(t){
+      var eo={};
+      if(t.endSeats&&t.endSeats['top']) eo.endTop=true;
+      if(t.endSeats&&t.endSeats['bot']) eo.endBot=true;
+      rc.appendChild(makeHCard(t,eo));
+    });
 
     // 下沉：固定 4×3 格位，直接讀 poolSlots[0..11]，格位10永遠走道
     var pg = document.getElementById('poolGrid'); pg.innerHTML='';
@@ -529,8 +548,7 @@ document.addEventListener('DOMContentLoaded', function () {
           var pt = tid ? get(tid) : null;
           if (pt) {
             var eopts = {};
-            if (row===0) eopts.endTop = true;
-            if (row===3 && slotIdx!==10) eopts.endBot = true;
+            // 短邊椅由使用者手動加，不自動顯示
             rowEl.appendChild(makeVCard(pt, eopts));
           } else {
             var emp=document.createElement('div'); emp.className='empty-cell pool-empty'; emp.textContent='＋';
@@ -601,6 +619,54 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('delWrap').style.display = isFixed ? 'none' : 'block';
 
     document.getElementById('seatList').innerHTML = '<div style="font-size:11px;color:#aaa;text-align:center;padding:8px 0;">直接點座位格輸入姓名<br>右鍵可標記素食／兒童</div>';
+
+    // 側邊椅選項：只有水池直桌首尾排 和 左右側橫桌 可加
+    var eopts = document.getElementById('endSeatOptions');
+    var ebtns = document.getElementById('endSeatBtns');
+    ebtns.innerHTML = '';
+    var canTop = false, canBot = false;
+    if (t.type === 'v' && t.zone === 'pool') {
+      var col = t.slotIdx % 3, row = Math.floor(t.slotIdx / 3);
+      canTop = (row === 0);
+      canBot = (row === 3 && t.slotIdx !== 10);
+    }
+    // 右側欄橫桌：只有走道側（left）可加側邊椅
+    var canSide = (t.type === 'h' && t.zone === 'right');
+    // 水池直桌首尾排
+    if (t.type === 'v' && t.zone === 'pool') {
+      var row2 = Math.floor(t.slotIdx / 3);
+      canTop = (row2 === 0);
+      canBot = (row2 === 3 && t.slotIdx !== 10);
+    }
+    if (canTop || canBot || canSide) {
+      eopts.style.display = 'block';
+      function makeEndBtn(pos, label) {
+        var hasEnd = !!(t.endSeats && t.endSeats[pos] !== undefined);
+        var btn = document.createElement('button');
+        btn.className = 'btn ghost';
+        btn.style.fontSize = '12px';
+        btn.textContent = hasEnd ? ('✓ 已加' + label) : ('＋ 加' + label);
+        btn.onclick = function() {
+          if (!t.endSeats) t.endSeats = {};
+          if (hasEnd) {
+            delete t.endSeats[pos];
+            hasEnd = false;
+          } else {
+            t.endSeats[pos] = { name: '', veg: false, kid: false, help: false };
+            hasEnd = true;
+          }
+          btn.textContent = hasEnd ? ('✓ 已加' + label) : ('＋ 加' + label);
+          render(); scheduleSave();
+        };
+        return btn;
+      }
+      if (canTop) ebtns.appendChild(makeEndBtn('top', '上方側邊椅'));
+      if (canBot) ebtns.appendChild(makeEndBtn('bot', '下方側邊椅'));
+      if (canSide) ebtns.appendChild(makeEndBtn('left', '走道側邊椅'));
+    } else {
+      eopts.style.display = 'none';
+    }
+
     document.getElementById('mask').classList.add('show');
   }
 
