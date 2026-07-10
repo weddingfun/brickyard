@@ -121,17 +121,16 @@ input.seat { -webkit-appearance:none; appearance:none; }
 .save-status.error { color:#c0392b; }
 @media print {
   @page { size: A4 landscape; margin: 0; }
-  html { height:210mm; overflow:hidden; }
-  body { width:297mm; height:210mm; overflow:hidden; background:#fff; padding:0; margin:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-  .toolbar,.stat,.save-status,.mask,.hint-bar,.legend { display:none !important; }
+  html, body { margin:0; padding:0; background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .toolbar,.stat,.save-status,.mask,.hint-bar,.legend,.hint-bar { display:none !important; }
   #print-wrapper {
     transform-origin: top left;
-    transform: scale(0.76);
-    width: 132%;
+    transform: scale(0.62);
+    width: 161%;
     position: absolute;
     top: 0; left: 0;
   }
-  .venue-layout { grid-template-columns:90px 1fr 90px; }
+  .venue-layout { grid-template-columns:150px 1fr 150px; gap:6px; }
   .hcard { min-width:0; }
   .vcard { min-width:0; }
   h1 { font-size:16px; margin-bottom:1px; }
@@ -140,6 +139,8 @@ input.seat { -webkit-appearance:none; appearance:none; }
   .venue-wrap { box-shadow:none; padding:6px; max-width:100%; }
   .empty-cell { display:none !important; }
   body.place-empty .seat.empty-s::after { content:"　"; display:block; }
+  /* 確保底部區塊不換頁 */
+  .bottom-row, .av-bar { page-break-inside:avoid; break-inside:avoid; }
 }
 </style>
 </head>
