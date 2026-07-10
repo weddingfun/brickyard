@@ -129,9 +129,9 @@ input.seat { -webkit-appearance:none; appearance:none; }
   .venue-layout { grid-template-columns:1fr 2fr 1fr; gap:6px; }
   .hcard { min-width:0; }
   .vcard { min-width:0; }
-  h1 { font-size:16px; margin-bottom:1px; }
+  h1 { font-size:18px; margin-bottom:2px; }
   .sub { font-size:9px; margin-bottom:1px; }
-  #coupleTitle { font-size:10px; margin-bottom:3px; }
+  #coupleTitle { font-size:15px; font-weight:700; color:#1a1a1a; margin-bottom:4px; }
   .venue-wrap { box-shadow:none; padding:6px; max-width:100%; }
   .empty-cell { display:none !important; }
   body.place-empty .seat.empty-s::after { content:"　"; display:block; }
@@ -142,7 +142,7 @@ input.seat { -webkit-appearance:none; appearance:none; }
 <div id="print-wrapper">
 <h1>婚宴座位表</h1>
 <div class="sub">美軍俱樂部 BRICK YARD 33⅓ × 想樂創意</div>
-<div class="sub" id="coupleTitle" style="font-size:12px;color:#888;margin-bottom:4px;"></div>
+<div id="coupleTitle" style="text-align:center;font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:4px;letter-spacing:1px;"></div>
 <div class="save-status" id="saveStatus"></div>
 <div class="toolbar">
   <button class="btn ghost" id="addPoolBtn">＋ 水池桌</button>
@@ -781,22 +781,18 @@ document.addEventListener('DOMContentLoaded', function () {
     if (ep && ep.value === 'yes') document.body.classList.add('place-empty');
     else document.body.classList.remove('place-empty');
     var wrapper = document.getElementById('print-wrapper');
-    wrapper.style.transform = 'none';
-    var W = wrapper.scrollWidth;
-    var H = wrapper.scrollHeight;
+    wrapper.style.zoom = '';
+    var W = wrapper.offsetWidth;
+    var H = wrapper.offsetHeight;
+    // A4 橫向可用：287mm×200mm ≈ 1085×756px
     var scaleW = 1085 / W;
     var scaleH = 756 / H;
     var scale = Math.min(scaleW, scaleH, 1);
-    wrapper.style.transformOrigin = 'top left';
-    wrapper.style.transform = 'scale(' + scale + ')';
-    wrapper.style.width = (100 / scale) + '%';
-    wrapper.style.marginBottom = '-' + Math.round(H * (1 - scale)) + 'px';
+    wrapper.style.zoom = scale;
     window.print();
     setTimeout(function(){
-      wrapper.style.transform = '';
-      wrapper.style.width = '';
-      wrapper.style.marginBottom = '';
-    }, 500);
+      wrapper.style.zoom = '';
+    }, 1000);
   };
 
   function updateStat(){
