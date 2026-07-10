@@ -784,11 +784,11 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('printBtn').onclick=function(){ window.print(); };
 
   function updateStat(){
-    var seated=0,veg=0,kid=0,totalcap=0,maincap=0;
+    var seated=0,veg=0,kid=0,totalcap=0,maincap=0,empty=0;
     tables.forEach(function(t){
       totalcap += t.seats.length;
       if(t.type==='m') maincap += t.seats.length;
-      t.seats.forEach(function(s){if(s.name.trim()){seated++;if(s.veg)veg++;if(s.kid)kid++;}});
+      t.seats.forEach(function(s){if(s.name.trim()){seated++;if(s.veg)veg++;if(s.kid)kid++;}else{empty++;}});
       if(t.endSeats){ Object.values(t.endSeats).forEach(function(s){ if(s.name.trim()){seated++;totalcap++;if(s.veg)veg++;if(s.kid)kid++;} }); }
     });
     document.getElementById('totalcap').textContent=totalcap;
