@@ -61,6 +61,8 @@ h1 { font-size:16px; letter-spacing:2px; text-align:center; margin-bottom:2px; }
 .vcard .table-mid { display:flex; align-items:center; justify-content:center; font-size:8px; color:#3d6636; font-weight:700; letter-spacing:1px; padding:2px 4px; background:#D4EAD0; border-left:1px solid #5A8A52; border-right:1px solid #5A8A52; cursor:pointer; width:28px; min-width:28px; text-align:center; word-break:break-all; line-height:1.4; white-space:normal; }
 .end-seat-wrap { display:flex; justify-content:center; margin:2px 0; }
 .end-seat-wrap input.seat { width:60%; max-width:80px; font-size:8px; }
+.hcard .end-seat-wrap { margin:1px 0; }
+.hcard .end-seat-wrap input.seat { width:24px; min-width:24px; max-width:28px; font-size:7px; padding:2px 1px; text-align:center; }
 .end-seat-btn { font-size:9px; color:#5A8A52; cursor:pointer; text-align:center; padding:2px; opacity:0.6; }
 .end-seat-btn:hover { opacity:1; }
 .vcard .table-mid:hover { background:#C0E0B8; }
@@ -426,10 +428,18 @@ document.addEventListener('DOMContentLoaded', function () {
     opts = opts || {};
     var div = document.createElement('div');
     div.className = 'tcard hcard';
-    // 短邊椅（左側）
+    // 用 flex row 包住：左側邊椅 + 桌子主體
+    var wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;flex-direction:row;align-items:stretch;width:100%';
+    // 左側邊椅（A/D旁，走道側）
     if (t.endSeats && t.endSeats.left !== undefined) {
-      div.appendChild(makeEndSeat(t, 'left'));
+      var ls = makeEndSeat(t, 'left');
+      ls.style.cssText = 'display:flex;flex-direction:column;justify-content:center;padding:2px 2px;min-width:28px;border-right:1px solid #ddd;margin-right:2px;';
+      wrapper.appendChild(ls);
     }
+    // 桌子主體
+    var body = document.createElement('div');
+    body.style.cssText = 'flex:1;min-width:0;';
     // 上排3
     var topRow = document.createElement('div'); topRow.className = 'h-row';
     for (var i=0;i<3;i++) topRow.appendChild(makeSeat(t,i));
@@ -440,11 +450,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // 下排3
     var botRow = document.createElement('div'); botRow.className = 'h-row';
     for (var i=3;i<6;i++) botRow.appendChild(makeSeat(t,i));
-    div.appendChild(topRow); div.appendChild(mid); div.appendChild(botRow);
-    // 短邊椅（右側）
-    if (t.endSeats && t.endSeats.right !== undefined) {
-      div.appendChild(makeEndSeat(t, 'right'));
-    }
+    body.appendChild(topRow); body.appendChild(mid); body.appendChild(botRow);
+    wrapper.appendChild(body);
+    div.appendChild(wrapper);
     return div;
   }
 
@@ -548,7 +556,23 @@ document.addEventListener('DOMContentLoaded', function () {
       for (var col=0; col<3; col++) {
         var slotIdx = row*3+col;
         if (slotIdx===10) {
-          var spacer=document.createElement('div'); rowEl.appendChild(spacer);
+          var hasMain = tables.some(function(t){ return t.type==='m'; });
+          if (hasMain) {
+            var spacer=document.createElement('div'); rowEl.appendChild(spacer);
+          } else {
+            var tid10 = poolSlots[slotIdx];
+            var pt10 = tid10 ? get(tid10) : null;
+            if (pt10) {
+              var eopts10 = {};
+              if (pt10.endSeats && pt10.endSeats['top']) eopts10.endTop = true;
+              if (pt10.endSeats && pt10.endSeats['bot']) eopts10.endBot = true;
+              rowEl.appendChild(makeVCard(pt10, eopts10));
+            } else {
+              var emp10=document.createElement('div'); emp10.className='empty-cell pool-empty'; emp10.textContent='＋';
+              (function(si){ emp10.onclick=function(){ doAddPoolAtSlot(si); }; })(slotIdx);
+              rowEl.appendChild(emp10);
+            }
+          }
         } else {
           var tid = poolSlots[slotIdx];
           var pt = tid ? get(tid) : null;
@@ -568,7 +592,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 主桌
     var mz = document.getElementById('mainZone'); mz.innerHTML='';
-    tables.filter(function(t){return t.type==='m';}).forEach(function(t){ mz.appendChild(makeMCard(t)); });
+    var mainTables = tables.filter(function(t){return t.type==='m';});
+    mainTables.forEach(function(t){ mz.appendChild(makeMCard(t)); });
+    if (mainTables.length === 0) {
+      var addMainBtn = document.createElement('button');
+      addMainBtn.className = 'btn ghost';
+      addMainBtn.style.cssText = 'font-size:12px;margin:4px auto;display:block;';
+      addMainBtn.textContent = '＋ 加回主桌';
+      addMainBtn.onclick = function(){
+        // 清空 slot 10
+        poolSlots[10] = null;
+        addTable('pool','m','主桌');
+        render(); scheduleSave();
+      };
+      mz.appendChild(addMainBtn);
+    }
 
     // 舞台
     var sg = document.getElementById('stageRow'); sg.innerHTML='';
@@ -583,9 +621,9 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function doAddPool() {
-    // 找第一個空格位（跳過10）
+    var hasMain = tables.some(function(t){ return t.type==='m'; });
     var slot=-1;
-    for(var s=0;s<12;s++){ if(s===10) continue; if(poolSlots[s]===null){slot=s;break;} }
+    for(var s=0;s<12;s++){ if(s===10 && hasMain) continue; if(poolSlots[s]===null){slot=s;break;} }
     if(slot<0){ alert('水池區已達最大桌數'); return; }
     var label = prompt('桌名稱', (countZone('pool')+13)+'桌');
     if (label===null) return;
@@ -634,15 +672,19 @@ document.addEventListener('DOMContentLoaded', function () {
     if (t.type === 'v' && t.zone === 'pool') {
       var col = t.slotIdx % 3, row = Math.floor(t.slotIdx / 3);
       canTop = (row === 0);
-      canBot = (row === 3 && t.slotIdx !== 10);
+      var hasMainForBot = tables.some(function(t2){ return t2.type==='m'; });
+      canBot = (row === 3 && (t.slotIdx !== 10 || !hasMainForBot));
     }
     // 右側欄橫桌：只有走道側（left）可加側邊椅
-    var canSide = (t.type === 'h' && t.zone === 'right');
+    var canSide = false; // 右側欄不加側邊椅
     // 水池直桌首尾排
     if (t.type === 'v' && t.zone === 'pool') {
       var row2 = Math.floor(t.slotIdx / 3);
       canTop = (row2 === 0);
       canBot = (row2 === 3 && t.slotIdx !== 10);
+    }
+    if (t.zone === 'stage') {
+      canTop = true; canBot = true;
     }
     if (canTop || canBot || canSide) {
       eopts.style.display = 'block';
@@ -668,7 +710,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       if (canTop) ebtns.appendChild(makeEndBtn('top', '上方側邊椅'));
       if (canBot) ebtns.appendChild(makeEndBtn('bot', '下方側邊椅'));
-      if (canSide) ebtns.appendChild(makeEndBtn('left', '走道側邊椅'));
+      if (canSide) ebtns.appendChild(makeEndBtn('left', '走道側邊椅（A/D旁）'));
     } else {
       eopts.style.display = 'none';
     }
