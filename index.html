@@ -841,6 +841,7 @@ document.addEventListener('DOMContentLoaded', function () {
           if (wd) wd.textContent = data.order.weddingDate || '';
           var ms = document.getElementById('mealSession');
           if (ms) ms.textContent = data.order.mealSession || '';
+          document.title = (data.order.weddingDate || '') + ' ' + data.order.groomName + '&' + data.order.brideName + '｜美軍座位表';
         }
         if (data && data.seat && data.seat.tables && data.seat.tables.length > 0) {
           tables = [];
