@@ -255,8 +255,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // 自動儲存
   var saveTimer = null;
+  var LOADED = false;   // 後端資料載入成功前，一律不存檔
   function scheduleSave() {
-    if (!GAS_MODE || !TOKEN) return;
+    if (!GAS_MODE || !TOKEN || !LOADED) return;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(doSave, 1200);
   }
@@ -822,8 +823,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ── 啟動（所有宣告完成後才執行）──
   seed();
-  if (TOKEN) {
+    if (TOKEN) {
     setStatus('saving', '載入中…');
+    var lockEl = document.createElement('div');
+    lockEl.id = 'loadLock';
+    lockEl.style.cssText = 'position:fixed;inset:0;background:rgba(255,255,255,.75);z-index:300;display:flex;align-items:center;justify-content:center;font-size:15px;color:#555;';
+    lockEl.textContent = '座位表載入中，請稍候…';
+    document.body.appendChild(lockEl);
+
     fetch(BASE_URL + '?token=' + encodeURIComponent(TOKEN) + '&action=getSeatData')
       .then(function(r){ return r.json(); })
       .then(function(data){
@@ -839,7 +846,7 @@ document.addEventListener('DOMContentLoaded', function () {
           tables = [];
           for (var _p=0;_p<12;_p++) poolSlots[_p] = null;
           data.seat.tables.forEach(function(t) {
-                        tables.push({ id: t.id, zone: t.zone, type: t.type, label: t.label,
+            tables.push({ id: t.id, zone: t.zone, type: t.type, label: t.label,
                           seats: t.seats, slotIdx: t.slotIdx !== undefined ? t.slotIdx : -1,
                           endSeats: t.endSeats || undefined });
           });
@@ -850,11 +857,15 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
           setStatus('saved', '');
         }
+        LOADED = true;
+        lockEl.remove();
       })
-      .catch(function(e){ setStatus('error', '載入失敗：' + e.message); });
+      .catch(function(e){
+        setStatus('error', '載入失敗，請重新整理頁面（目前的修改不會被儲存）');
+        lockEl.textContent = '⚠️ 載入失敗，請重新整理頁面';
+        lockEl.style.color = '#c0392b';
+      });
   }
-
-});
 </script>
 </body>
 </html>
