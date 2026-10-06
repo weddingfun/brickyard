@@ -284,7 +284,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var MAX_STAGE = 4;   // 舞台最多4桌
   var MAX_POOL = 11;   // 下沉最多11桌（3欄×4行，最後一行中間留主桌）
-  // 左右側各固定6桌，不增減
+    var MAX_SIDE = 6;    // 左右側各最多6桌，可刪可加回
+
+  function makeSideEmpty(zone) {
+    var emp = document.createElement('div');
+    emp.className = 'empty-cell';
+    emp.style.minWidth = '0';
+    emp.textContent = '＋ 加回桌子';
+    emp.onclick = function(){ doAddSide(zone); };
+    return emp;
+  }
+
+  function doAddSide(zone) {
+    if (countZone(zone) >= MAX_SIDE) { alert('此側已達最大桌數（' + MAX_SIDE + '桌）'); return; }
+    var label = prompt('桌名稱', '新桌');
+    if (label === null) return;
+    var t = addTable(zone, 'h', label || '新桌');
+    render(); scheduleSave(); openSheet(t.id, null);
+  }
 
   var seq = 0;
   var tables = [];
@@ -540,9 +557,10 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function render() {
-    // 左側
+        // 左側
     var lc = document.getElementById('leftCol'); lc.innerHTML='';
     tables.filter(function(t){return t.zone==='left';}).forEach(function(t){ lc.appendChild(makeHCard(t)); });
+    if (countZone('left') < MAX_SIDE) lc.appendChild(makeSideEmpty('left'));
 
     // 右側
     var rc = document.getElementById('rightCol'); rc.innerHTML='';
@@ -552,7 +570,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if(t.endSeats&&t.endSeats['bot']) eo.endBot=true;
       rc.appendChild(makeHCard(t,eo));
     });
-
+    if (countZone('right') < MAX_SIDE) rc.appendChild(makeSideEmpty('right'));
     // 下沉：固定 4×3 格位，直接讀 poolSlots[0..11]，格位10永遠走道
     var pg = document.getElementById('poolGrid'); pg.innerHTML='';
     for (var row=0; row<4; row++) {
@@ -663,8 +681,8 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('mDiag').textContent = diagText;
 
     // 固定桌不顯示刪除
-    var isFixed = t.zone==='left' || t.zone==='right';
-    document.getElementById('delWrap').style.display = isFixed ? 'none' : 'block';
+        // 主桌不給刪（主桌有獨立的「加回主桌」流程），其餘含兩側都可刪
+    document.getElementById('delWrap').style.display = t.type==='m' ? 'none' : 'block';
 
     document.getElementById('seatList').innerHTML = '<div style="font-size:11px;color:#aaa;text-align:center;padding:8px 0;">直接點座位格輸入姓名<br>右鍵可標記素食／兒童</div>';
 
