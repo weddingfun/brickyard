@@ -821,8 +821,9 @@ document.addEventListener('DOMContentLoaded', function () {
           tables = [];
           for (var _p=0;_p<12;_p++) poolSlots[_p] = null;
           data.seat.tables.forEach(function(t) {
-            tables.push({ id: t.id, zone: t.zone, type: t.type, label: t.label,
-                          seats: t.seats, slotIdx: t.slotIdx !== undefined ? t.slotIdx : -1 });
+                        tables.push({ id: t.id, zone: t.zone, type: t.type, label: t.label,
+                          seats: t.seats, slotIdx: t.slotIdx !== undefined ? t.slotIdx : -1,
+                          endSeats: t.endSeats || undefined });
           });
           seq = Math.max.apply(null, tables.map(function(t){ return t.id; })) || 0;
           if (data.seat.poolSlots) data.seat.poolSlots.forEach(function(v,i){ poolSlots[i] = v; });
