@@ -310,7 +310,11 @@ document.addEventListener('DOMContentLoaded', function () {
     var getUrl = BASE_URL + '?action=saveSeatData&token=' + encodeURIComponent(TOKEN) + '&seat=' + encodeURIComponent(seatStr);
     if (getUrl.length <= 2000) {
       fetch(getUrl)
-        .then(function(){ setStatus('saved', '✓ 已儲存 ' + timeStr()); })
+        .then(function(r){ return r.json(); })
+        .then(function(res){
+          if (res && res.success === false) setStatus('error', '⚠️ 未儲存：' + (res.error || '後端拒絕') + '，請重新整理頁面');
+          else setStatus('saved', '✓ 已儲存 ' + timeStr());
+        })
         .catch(function(e){ setStatus('error', '儲存失敗：' + e.message); });
     } else {
       fetch(BASE_URL, {
