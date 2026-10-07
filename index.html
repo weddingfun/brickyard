@@ -112,18 +112,69 @@ input.seat { -webkit-appearance:none; appearance:none; }
 .save-status.saving { color:#f0a500; }
 .save-status.saved { color:#5A8A52; }
 .save-status.error { color:#c0392b; }
+/* ── 列印專用版面（A4 橫式） ── */
+#printSheet { display:none; }
+.ps { width:285mm; font-family:-apple-system,"PingFang TC","Noto Sans TC","Helvetica Neue",sans-serif; color:#222; }
+.ps-head { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:0.6mm solid #9D380E; padding-bottom:1.5mm; margin-bottom:2mm; }
+.ps-title { font-size:15pt; font-weight:800; color:#9D380E; letter-spacing:.5pt; }
+.ps-title .ps-couple { color:#222; margin-left:3mm; }
+.ps-title .ps-brand { font-size:9pt; font-weight:600; color:#6BA1C7; margin-left:3mm; }
+.ps-meta { text-align:right; font-size:8pt; color:#555; line-height:1.5; }
+.ps-meta b { font-size:11pt; color:#9D380E; }
+.ps-legend { display:inline-flex; gap:2.5mm; align-items:center; }
+.ps-sw { display:inline-block; width:3mm; height:3mm; border-radius:.6mm; border:.2mm solid #999; vertical-align:-.4mm; margin-right:.6mm; }
+.ps-zone-label { font-size:7pt; font-weight:700; color:#666; letter-spacing:1pt; text-align:center; margin-bottom:1mm; }
+.ps-stage { background:#EFEFEF; border:.3mm solid #999; border-radius:1.5mm; padding:1.5mm; margin-bottom:2mm; }
+.ps-stage-row { display:flex; gap:2mm; justify-content:center; }
+.ps-stage-row .ps-t { flex:1; max-width:70mm; }
+.ps-layout { display:grid; grid-template-columns:52mm 1fr 52mm; gap:2.5mm; }
+.ps-side { display:flex; flex-direction:column; gap:1.5mm; }
+.ps-highchair { background:#FFF8E6; border:.3mm solid #D4A017; border-radius:1.5mm; padding:1.2mm; display:flex; flex-direction:column; gap:1.5mm; }
+.ps-highchair .ps-zone-label { color:#8a5e00; margin-bottom:0; }
+.ps-pool { background:#EEF5EB; border:.3mm solid #5A8A52; border-radius:1.5mm; padding:1.5mm; }
+.ps-pool .ps-zone-label { color:#3d6636; }
+.ps-pool-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.5mm; margin-bottom:1.5mm; }
+.ps-main-wrap { display:flex; justify-content:center; margin:1mm 0 1.5mm; }
+.ps-facility { display:flex; gap:1mm; }
+.ps-fac { font-size:7pt; text-align:center; border-radius:1mm; padding:1mm 2mm; letter-spacing:1pt; color:#555; background:#E4E4E4; }
+.ps-fac.drink { background:#D6ECF3; color:#1a4a5a; }
+.ps-fac.bar { background:#F3D2C9; color:#7a2010; font-weight:700; flex:1; }
+.ps-fac.av { background:#F7E3BC; color:#6a4a10; flex:1; }
+.ps-bottom { display:flex; gap:1.5mm; margin-top:2mm; align-items:stretch; }
+
+.ps-t { background:#fff; border:.3mm solid #9D380E; border-radius:1.5mm; padding:1mm; display:flex; flex-direction:column; gap:.8mm; break-inside:avoid; }
+.ps-row { display:grid; grid-template-columns:repeat(3,1fr); gap:.8mm; }
+.ps-bar { background:#9D380E; color:#fff; font-size:7.5pt; font-weight:700; text-align:center; border-radius:.8mm; padding:.6mm 1mm; letter-spacing:.5pt; }
+.ps-bar small, .ps-vbar small { font-weight:400; opacity:.85; margin-left:1.5mm; font-size:6.5pt; }
+.ps-vbody { display:flex; gap:.8mm; align-items:stretch; }
+.ps-col { flex:1; display:flex; flex-direction:column; gap:.8mm; min-width:0; }
+.ps-vbar { width:9mm; background:#9D380E; color:#fff; font-size:7pt; font-weight:700; border-radius:.8mm; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; word-break:break-all; line-height:1.25; padding:.5mm; }
+.ps-vbar small { margin-left:0; display:block; }
+.ps-end { display:flex; justify-content:center; }
+.ps-end .ps-seat { width:45%; }
+.ps-main { border-color:#B8944A; background:#FBF5E6; min-width:70mm; }
+.ps-main .ps-bar { background:#B8944A; }
+.ps-main .ps-row { grid-template-columns:1fr 1fr; }
+
+.ps-seat { border:.25mm solid #D5CFC6; border-radius:.8mm; min-height:7mm; padding:.4mm .8mm; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; background:#fff; overflow:hidden; }
+.ps-seat .n { font-size:7.5pt; font-weight:700; line-height:1.15; word-break:break-all; }
+.ps-seat .tg { font-size:6pt; font-weight:700; line-height:1.1; margin-top:.3mm; }
+.ps-seat.veg { background:#DDF0D6; border-color:#7FB571; }
+.ps-seat.veg .tg { color:#2d6a21; }
+.ps-seat.kid { background:#DCE9F8; border-color:#7FA6D6; }
+.ps-seat.kid .tg { color:#1f5aa6; }
+.ps-seat.help { background:#ECE4F7; border-color:#A88BD3; }
+.ps-seat.help .tg { color:#5a2d8a; }
+.ps-seat.empty { background:#fff; border-style:dashed; }
+.ps-seat.nop { background:#F3F3F3; border-style:dashed; }
+.ps-seat.nop .n { font-size:6pt; font-weight:400; color:#aaa; }
+.ps-main .ps-seat .n { font-size:9pt; }
+
 @media print {
-  @page { size: A4 landscape; margin: 5mm; }
+  @page { size: A4 landscape; margin: 6mm; }
   html, body { margin:0; padding:0; background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-  .toolbar,.stat,.save-status,.mask,.hint-bar,.legend,#loadLock { display:none !important; }
-  #print-wrapper { zoom: 0.6; }
-  .venue-layout { grid-template-columns:1fr 2fr 1fr; gap:6px; }
-  .hcard { min-width:0; }
-  .vcard { min-width:0; }
-  #coupleTitle, #weddingDate, #mealSession { font-size:18px !important; font-weight:800 !important; }
-  .venue-wrap { box-shadow:none; padding:6px; max-width:100%; }
-  .empty-cell { display:none !important; }
-  body.place-empty .seat.empty-s::after { content:"　"; display:block; }
+  #print-wrapper, .mask, #loadLock, #tagMenu { display:none !important; }
+  #printSheet { display:block !important; }
 }
 </style>
 </head>
@@ -200,6 +251,7 @@ input.seat { -webkit-appearance:none; appearance:none; }
 </div>
 
 </div><!-- /print-wrapper -->
+<div id="printSheet"></div>
 
 <!-- 彈窗 -->
 <div class="mask" id="mask">
@@ -276,6 +328,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var MAX_POOL = 11;   // 水池最多11桌（3欄×4行，格位10留給主桌）
   var MAX_SIDE = 6;    // 左右側各最多6桌，可刪可加回
 
+  var ORDER_INFO = null;
   var seq = 0;
   var tables = [];
   var editing = null;
@@ -684,12 +737,146 @@ document.addEventListener('DOMContentLoaded', function () {
     render(); scheduleSave();
   };
 
-  document.getElementById('printBtn').onclick = function(){
+  // ── 列印：另外組一份 A4 橫式專用版面 ──
+  function escH(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c];
+    });
+  }
+  function emptyPlaceMode() {
     var ep = document.querySelector('input[name="emptyPlace"]:checked');
-    if (ep && ep.value === 'yes') document.body.classList.add('place-empty');
-    else document.body.classList.remove('place-empty');
+    return ep ? ep.value : 'no';
+  }
+  function psSeat(s) {
+    if (!s || !String(s.name || '').trim()) {
+      return emptyPlaceMode() === 'no'
+        ? '<div class="ps-seat nop"><span class="n">不擺餐具</span></div>'
+        : '<div class="ps-seat empty"></div>';
+    }
+    var cls = s.veg ? 'veg' : s.kid ? 'kid' : s.help ? 'help' : '';
+    var tags = [];
+    if (s.veg) tags.push('素食');
+    if (s.kid) tags.push('兒童椅');
+    if (s.help) tags.push('協助送餐');
+    return '<div class="ps-seat ' + cls + '"><span class="n">' + escH(s.name) + '</span>' +
+      (tags.length ? '<span class="tg">' + tags.join('・') + '</span>' : '') + '</div>';
+  }
+  function psCount(t) {
+    var n = 0;
+    t.seats.forEach(function(s){ if (s.name.trim()) n++; });
+    if (t.endSeats) Object.keys(t.endSeats).forEach(function(k){ if (t.endSeats[k].name.trim()) n++; });
+    return n;
+  }
+  function psH(t) {
+    return '<div class="ps-t">' +
+      '<div class="ps-row">' + psSeat(t.seats[0]) + psSeat(t.seats[1]) + psSeat(t.seats[2]) + '</div>' +
+      '<div class="ps-bar">' + escH(t.label) + '<small>' + psCount(t) + '人</small></div>' +
+      '<div class="ps-row">' + psSeat(t.seats[3]) + psSeat(t.seats[4]) + psSeat(t.seats[5]) + '</div>' +
+    '</div>';
+  }
+  function psV(t) {
+    var top = (t.endSeats && t.endSeats.top) ? '<div class="ps-end">' + psSeat(t.endSeats.top) + '</div>' : '';
+    var bot = (t.endSeats && t.endSeats.bot) ? '<div class="ps-end">' + psSeat(t.endSeats.bot) + '</div>' : '';
+    return '<div class="ps-t">' + top +
+      '<div class="ps-vbody">' +
+        '<div class="ps-col">' + psSeat(t.seats[0]) + psSeat(t.seats[1]) + psSeat(t.seats[2]) + '</div>' +
+        '<div class="ps-vbar">' + escH(t.label) + '<small>' + psCount(t) + '人</small></div>' +
+        '<div class="ps-col">' + psSeat(t.seats[3]) + psSeat(t.seats[4]) + psSeat(t.seats[5]) + '</div>' +
+      '</div>' + bot + '</div>';
+  }
+  function psMain(t) {
+    return '<div class="ps-t ps-main">' +
+      '<div class="ps-bar">✦ ' + escH(t.label) + ' ✦</div>' +
+      '<div class="ps-row">' + psSeat(t.seats[0]) + psSeat(t.seats[1]) + '</div>' +
+    '</div>';
+  }
+
+  function buildPrintSheet() {
+    var guests = 0, veg = 0, kid = 0, help = 0;
+    tables.forEach(function(t){
+      var all = t.seats.slice();
+      if (t.endSeats) Object.keys(t.endSeats).forEach(function(k){ all.push(t.endSeats[k]); });
+      all.forEach(function(s){
+        if (!s.name.trim()) return;
+        guests++;
+        if (s.veg) veg++;
+        if (s.kid) kid++;
+        if (s.help) help++;
+      });
+    });
+    var tableCount = tables.filter(function(t){ return t.type !== 'm'; }).length;
+    var o = ORDER_INFO || {};
+    var dateStr = (o.weddingDate || '') + (o.mealSession ? ' ' + o.mealSession : '');
+    var couple = o.groomName ? (o.groomName + ' & ' + o.brideName) : '';
+
+    var html = '<div class="ps">';
+    html += '<div class="ps-head">' +
+      '<div class="ps-title">' + escH(dateStr) + '　美軍俱樂部 Brick Yard 座位表' +
+        (couple ? '<span class="ps-couple">' + escH(couple) + '</span>' : '') +
+        '<span class="ps-brand">wedding fun 想樂</span></div>' +
+      '<div class="ps-meta">賓客 <b>' + guests + '</b> 人｜素食 ' + veg + '・兒童椅 ' + kid + '・協助送餐 ' + help + '｜' + tableCount + ' 桌＋主桌<br>' +
+        '<span class="ps-legend">' +
+          '<span><i class="ps-sw" style="background:#DDF0D6;border-color:#7FB571"></i>素食</span>' +
+          '<span><i class="ps-sw" style="background:#DCE9F8;border-color:#7FA6D6"></i>兒童椅</span>' +
+          '<span><i class="ps-sw" style="background:#ECE4F7;border-color:#A88BD3"></i>協助送餐</span>' +
+          '<span>空位：' + (emptyPlaceMode() === 'no' ? '不擺餐具' : '擺餐具') + '</span>' +
+        '</span></div>' +
+    '</div>';
+
+    // 舞台
+    var stage = tables.filter(function(t){ return t.zone === 'stage'; });
+    if (stage.length) {
+      html += '<div class="ps-stage"><div class="ps-zone-label">投 影 幕 ／ 舞 台</div><div class="ps-stage-row">' +
+        stage.map(psV).join('') + '</div></div>';
+    }
+
+    html += '<div class="ps-layout">';
+    // 左側
+    html += '<div class="ps-side"><div class="ps-highchair"><div class="ps-zone-label">高腳椅區・兒童椅不適合此區</div>' +
+      tables.filter(function(t){ return t.zone === 'left'; }).map(psH).join('') + '</div></div>';
+    // 水池
+    var hasMain = tables.some(function(t){ return t.type === 'm'; });
+    html += '<div class="ps-pool"><div class="ps-zone-label">▼ 水 池 區 ▼</div>';
+    for (var r = 0; r < 4; r++) {
+      var cells = '', any = false;
+      for (var c = 0; c < 3; c++) {
+        var si = r * 3 + c;
+        var pt = poolSlots[si] ? get(poolSlots[si]) : null;
+        if (si === 10 && hasMain) pt = null;
+        if (pt) any = true;
+        cells += pt ? psV(pt) : '<div></div>';
+      }
+      if (any) html += '<div class="ps-pool-row">' + cells + '</div>';
+    }
+    var mains = tables.filter(function(t){ return t.type === 'm'; });
+    if (mains.length) html += '<div class="ps-main-wrap">' + mains.map(psMain).join('') + '</div>';
+    html += '<div class="ps-facility"><div class="ps-fac">樓梯</div><div class="ps-fac drink">飲料區</div><div class="ps-fac bar">Bar</div><div class="ps-fac">樓梯</div></div>';
+    html += '</div>';
+    // 右側
+    html += '<div class="ps-side">' + tables.filter(function(t){ return t.zone === 'right'; }).map(psH).join('') + '</div>';
+    html += '</div>';
+
+    html += '<div class="ps-bottom"><div class="ps-fac">餐檯</div><div class="ps-fac av">影 音 控 台</div><div class="ps-fac">斜坡／入口</div><div class="ps-fac">餐檯</div></div>';
+    html += '</div>';
+
+    var sheet = document.getElementById('printSheet');
+    sheet.innerHTML = html;
+
+    // 量尺寸，縮放到剛好一頁 A4 橫式（可用 285×198mm）
+    sheet.style.zoom = '';
+    sheet.style.cssText = 'display:block;position:absolute;left:-10000px;top:0;';
+    var px = 96 / 25.4;
+    var w = sheet.scrollWidth, h = sheet.scrollHeight;
+    var scale = Math.min(1, (285 * px) / w, (196 * px) / h);
+    sheet.style.cssText = '';
+    sheet.style.zoom = scale;
+  }
+
+  document.getElementById('printBtn').onclick = function(){
+    buildPrintSheet();
     window.print();
   };
+  window.addEventListener('beforeprint', buildPrintSheet);
 
   function updateStat(){
     var seated = 0, veg = 0, kid = 0, totalcap = 0, maincap = 0, empty = 0;
@@ -729,6 +916,7 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(function(r){ return r.json(); })
       .then(function(data){
         if (data && data.order && data.order.groomName) {
+          ORDER_INFO = data.order;
           document.getElementById('coupleTitle').textContent = data.order.groomName + ' & ' + data.order.brideName;
           document.getElementById('weddingDate').textContent = data.order.weddingDate || '';
           document.getElementById('mealSession').textContent = data.order.mealSession || '';
