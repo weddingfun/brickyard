@@ -199,6 +199,11 @@ input.seat { -webkit-appearance:none; appearance:none; }
   <label style="margin:0 8px;cursor:pointer;"><input type="radio" name="emptyPlace" id="ep_yes" value="yes"> 擺</label>
   <label style="cursor:pointer;"><input type="radio" name="emptyPlace" id="ep_no" value="no" checked> 不擺</label>
 </div>
+<div style="text-align:center;margin-bottom:6px;font-size:13px;">
+  新人主桌位置：
+  <label style="margin:0 8px;cursor:pointer;"><input type="radio" name="mainPos" id="mp_pool" value="pool" checked> 水池區</label>
+  <label style="cursor:pointer;"><input type="radio" name="mainPos" id="mp_stage" value="stage"> 舞台上</label>
+</div>
 <div class="stat">座位數 <b id="totalcap">0</b> 位（含新人 <b id="maincap">0</b> 位）　已排 <b id="seated">0</b> 人　空 <b id="emptyc">0</b>　素 <b id="vegc">0</b>　童 <b id="kidc">0</b>　共 <b id="tablec">0</b> 桌</div>
 <div style="text-align:center;font-size:11px;color:#666;margin-bottom:6px;background:#fff8e8;border:1px solid #e8d88a;border-radius:6px;padding:6px 12px;">
   📝 點選座位格直接輸入姓名　·　<b>右鍵（手機長按）</b>可標記素食 🌿、兒童椅 🪑 或協助送餐 🍽️　·　點選<b>桌號</b>可編輯桌次名稱及刪除桌次
@@ -297,6 +302,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // ── 自動儲存（載入成功前一律不存）──
   var saveTimer = null;
   var LOADED = false;
+  var mainPos = 'pool';   // 新人主桌位置：pool（水池區）／stage（舞台上）
   function scheduleSave() {
     if (!GAS_MODE || !TOKEN || !LOADED) return;
     clearTimeout(saveTimer);
@@ -305,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function doSave() {
     if (!TOKEN || !LOADED) return;
     setStatus('saving', '儲存中…');
-    var payload = { tables: tables, poolSlots: poolSlots };
+    var payload = { tables: tables, poolSlots: poolSlots, mainPos: mainPos };
     var seatStr = JSON.stringify(payload);
     var getUrl = BASE_URL + '?action=saveSeatData&token=' + encodeURIComponent(TOKEN) + '&seat=' + encodeURIComponent(seatStr);
     if (getUrl.length <= 2000) {
@@ -344,6 +350,8 @@ document.addEventListener('DOMContentLoaded', function () {
     for (var i = 0; i < n; i++) a.push({ name: '', veg: false, kid: false, help: false });
     return a;
   }
+  function mainInPool() { return mainPos === 'pool' && tables.some(function(t){ return t.type === 'm'; }); }
+  function stageMax() { return MAX_STAGE; }
   function get(id) { return tables.filter(function(t){ return t.id === id; })[0]; }
   function countZone(zone) { return tables.filter(function(t){ return t.zone === zone && t.type !== 'm'; }).length; }
   function seatClass(s) {
@@ -545,7 +553,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (countZone('right') < MAX_SIDE) rc.appendChild(makeSideEmpty('right'));
 
     // 水池：固定 4×3 格位，格位10 有主桌時留空
-    var hasMain = tables.some(function(t){ return t.type === 'm'; });
+    var hasMain = mainInPool();
     var pg = document.getElementById('poolGrid'); pg.innerHTML = '';
     for (var row = 0; row < 4; row++) {
       var rowEl = document.createElement('div'); rowEl.className = 'pool-row';
@@ -571,19 +579,19 @@ document.addEventListener('DOMContentLoaded', function () {
     // 主桌
     var mz = document.getElementById('mainZone'); mz.innerHTML = '';
     var mainTables = tables.filter(function(t){ return t.type === 'm'; });
-    mainTables.forEach(function(t){ mz.appendChild(makeMCard(t)); });
+    if (mainPos === 'pool') mainTables.forEach(function(t){ mz.appendChild(makeMCard(t)); });
     if (mainTables.length === 0) {
       var addMainBtn = document.createElement('button');
       addMainBtn.className = 'btn ghost';
       addMainBtn.style.cssText = 'font-size:12px;margin:4px auto;display:block;';
       addMainBtn.textContent = '＋ 加回主桌';
       addMainBtn.onclick = function(){
-        if (poolSlots[10]) {
+        if (mainPos === 'pool' && poolSlots[10]) {
           var t10 = get(poolSlots[10]);
           if (t10 && !confirm('主桌位置目前有「' + t10.label + '」，加回主桌會刪除該桌，確定？')) return;
           tables = tables.filter(function(x){ return x.id !== poolSlots[10]; });
         }
-        poolSlots[10] = null;
+        if (mainPos === 'pool') poolSlots[10] = null;
         addTable('pool', 'm', '主桌');
         render(); scheduleSave();
       };
@@ -592,8 +600,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 舞台
     var sg = document.getElementById('stageRow'); sg.innerHTML = '';
-    tables.filter(function(t){ return t.zone === 'stage'; }).forEach(function(t){ sg.appendChild(makeVCard(t)); });
-    if (countZone('stage') < MAX_STAGE) {
+    var stageCards = tables.filter(function(t){ return t.zone === 'stage'; }).map(makeVCard);
+    if (mainPos === 'stage') {
+      var mcs = mainTables.map(makeMCard);
+      var mid = Math.ceil(stageCards.length / 2);
+      stageCards = stageCards.slice(0, mid).concat(mcs, stageCards.slice(mid));
+    }
+    stageCards.forEach(function(c){ sg.appendChild(c); });
+    if (countZone('stage') < stageMax()) {
       var semp = document.createElement('div'); semp.className = 'empty-cell'; semp.style.minWidth = '130px';
       semp.textContent = '＋ 舞台桌'; semp.onclick = function(){ doAddStage(); };
       sg.appendChild(semp);
@@ -603,7 +617,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function doAddPool() {
-    var hasMain = tables.some(function(t){ return t.type === 'm'; });
+    var hasMain = mainInPool();
     var slot = -1;
     for (var s = 0; s < 12; s++) {
       if (s === 10 && hasMain) continue;
@@ -622,7 +636,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function doAddStage() {
-    if (countZone('stage') >= MAX_STAGE) { alert('舞台區已達最大桌數（' + MAX_STAGE + '桌）'); return; }
+    if (countZone('stage') >= stageMax()) { alert('舞台區已達最大桌數（' + stageMax() + '桌' + (mainPos === 'stage' ? '，含主桌' : '') + '）'); return; }
     var label = prompt('桌名稱', '新桌');
     if (label === null) return;
     var t = addTable('stage', 'v', label || '新桌');
@@ -714,6 +728,24 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('mask').onclick = function(e){
     if (e.target === document.getElementById('mask')) closeSheet();
   };
+
+  // 切換新人主桌位置
+  document.querySelectorAll('input[name="mainPos"]').forEach(function(r){
+    r.addEventListener('change', function(){
+      var want = r.value;
+      if (want === mainPos) return;
+      if (want === 'pool' && poolSlots[10]) {
+        var t10 = get(poolSlots[10]);
+        if (t10 && !confirm('水池主桌位置目前有「' + t10.label + '」，主桌移回水池會刪除該桌，確定？')) {
+          document.getElementById('mp_stage').checked = true; return;
+        }
+        tables = tables.filter(function(x){ return x.id !== poolSlots[10]; });
+        poolSlots[10] = null;
+      }
+      mainPos = want;
+      render(); scheduleSave();
+    });
+  });
 
   document.getElementById('addPoolBtn').onclick = doAddPool;
   document.getElementById('addStageBtn').onclick = doAddStage;
@@ -828,10 +860,14 @@ document.addEventListener('DOMContentLoaded', function () {
     '</div>';
 
     // 舞台
-    var stage = tables.filter(function(t){ return t.zone === 'stage'; });
-    if (stage.length) {
+    var stageParts = tables.filter(function(t){ return t.zone === 'stage'; }).map(psV);
+    if (mainPos === 'stage') {
+      var smid = Math.ceil(stageParts.length / 2);
+      stageParts = stageParts.slice(0, smid).concat(tables.filter(function(t){ return t.type === 'm'; }).map(psMain), stageParts.slice(smid));
+    }
+    if (stageParts.length) {
       html += '<div class="ps-stage"><div class="ps-zone-label">投 影 幕 ／ 舞 台</div><div class="ps-stage-row">' +
-        stage.map(psV).join('') + '</div></div>';
+        stageParts.join('') + '</div></div>';
     }
 
     html += '<div class="ps-layout">';
@@ -839,7 +875,7 @@ document.addEventListener('DOMContentLoaded', function () {
     html += '<div class="ps-side"><div class="ps-highchair"><div class="ps-zone-label">高腳椅區・兒童椅不適合此區</div>' +
       tables.filter(function(t){ return t.zone === 'left'; }).map(psH).join('') + '</div></div>';
     // 水池
-    var hasMain = tables.some(function(t){ return t.type === 'm'; });
+    var hasMain = mainInPool();
     html += '<div class="ps-pool"><div class="ps-zone-label">▼ 水 池 區 ▼</div>';
     for (var r = 0; r < 4; r++) {
       var cells = '', any = false;
@@ -853,7 +889,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (any) html += '<div class="ps-pool-row">' + cells + '</div>';
     }
     var mains = tables.filter(function(t){ return t.type === 'm'; });
-    if (mains.length) html += '<div class="ps-main-wrap">' + mains.map(psMain).join('') + '</div>';
+    if (mains.length && mainPos === 'pool') html += '<div class="ps-main-wrap">' + mains.map(psMain).join('') + '</div>';
     html += '<div class="ps-facility"><div class="ps-fac">樓梯</div><div class="ps-fac drink">飲料區</div><div class="ps-fac bar">Bar</div><div class="ps-fac">樓梯</div></div>';
     html += '</div>';
     // 右側
@@ -939,6 +975,8 @@ document.addEventListener('DOMContentLoaded', function () {
           });
           seq = Math.max.apply(null, tables.map(function(t){ return t.id; })) || 0;
           if (data.seat.poolSlots) data.seat.poolSlots.forEach(function(v, i){ poolSlots[i] = v; });
+          mainPos = data.seat.mainPos === 'stage' ? 'stage' : 'pool';
+          document.getElementById(mainPos === 'stage' ? 'mp_stage' : 'mp_pool').checked = true;
           render();
           setStatus('saved', '✓ 已載入上次儲存資料');
         } else {
