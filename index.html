@@ -310,31 +310,122 @@ document.addEventListener('DOMContentLoaded', function () {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(doSave, 1200);
   }
+  // ── 多人同步：定時抓雲端最新版，三方合併（打開時的版本／我的版本／雲端版本），只寫入自己改過的位子 ──
+  var BASE = null;          // 上次與雲端同步時的內容（字串）
+  var SAVING = false;
+  function normSeat(s) {
+    s = s || {};
+    return {
+      tables: (s.tables || []).map(function(t){ return { id: t.id, zone: t.zone, type: t.type, label: t.label, seats: (t.seats || []).map(function(x){ return { name: x.name || '', veg: !!x.veg, kid: !!x.kid, help: !!x.help }; }), slotIdx: t.slotIdx !== undefined ? t.slotIdx : -1, endSeats: t.endSeats || null, serve: t.serve || '', spare: t.spare || '' }; }),
+      poolSlots: (s.poolSlots || []).slice(0, 12).map(function(v){ return v === undefined ? null : v; }),
+      mainPos: s.mainPos === 'stage' ? 'stage' : 'pool'
+    };
+  }
+  function snap() { return normSeat({ tables: tables, poolSlots: poolSlots, mainPos: mainPos }); }
+  function flatSeat(s) {
+    var m = { mainPos: s.mainPos };
+    for (var i = 0; i < 12; i++) m['p' + i] = s.poolSlots[i] === undefined ? null : s.poolSlots[i];
+    s.tables.forEach(function(t){
+      var k = 't' + t.id + ':';
+      m[k + 'x'] = 1;
+      ['zone', 'type', 'label', 'slotIdx', 'serve', 'spare'].forEach(function(f){ m[k + f] = t[f] === undefined ? null : t[f]; });
+      m[k + 'end'] = JSON.stringify(t.endSeats || null);
+      m[k + 'n'] = t.seats.length;
+      t.seats.forEach(function(st, i){ ['name', 'veg', 'kid', 'help'].forEach(function(f){ m[k + 's' + i + f] = st[f]; }); });
+    });
+    return m;
+  }
+  function seatLabel(key, s) {
+    var mm = key.match(/^t(\d+):(?:s(\d+)(\w+)|(\w+))$/);
+    if (!mm) return key === 'mainPos' ? '主桌位置' : '桌位排列';
+    var t = s.tables.filter(function(x){ return String(x.id) === mm[1]; })[0];
+    var tl = (t && t.label) || '某桌';
+    if (mm[2] !== undefined) return tl + ' 第' + (+mm[2] + 1) + '位' + ({ name: '', veg: '（素食）', kid: '（兒童）', help: '（協助）' }[mm[3]] || '');
+    return tl + ({ serve: ' 送餐方式', spare: ' 空桌處理', label: ' 桌名', zone: ' 位置', slotIdx: ' 位置', x: '（新增／刪除）', n: ' 座位數' }[mm[4]] || '');
+  }
+  function show(v) { return v === null || v === undefined || v === '' ? '（空白）' : v === true ? '是' : v === false ? '否' : String(v); }
+  function mergeSeat(baseS, mineS, theirS) {
+    var b = flatSeat(baseS), l = flatSeat(mineS), r = flatSeat(theirS), out = {}, conf = [];
+    var keys = {}; [b, l, r].forEach(function(o){ Object.keys(o).forEach(function(k){ keys[k] = 1; }); });
+    Object.keys(keys).forEach(function(k){
+      var bv = b[k] === undefined ? null : b[k], lv = l[k] === undefined ? null : l[k], rv = r[k] === undefined ? null : r[k];
+      if (lv === bv) out[k] = rv;
+      else if (rv === bv || rv === lv) out[k] = lv;
+      else { out[k] = lv; conf.push({ k: k, mine: lv, theirs: rv }); }
+    });
+    if (conf.length) {
+      var list = conf.slice(0, 12).map(function(c){ return '・' + seatLabel(c.k, mineS) + '：你「' + show(c.mine) + '」／對方「' + show(c.theirs) + '」'; }).join('\n');
+      var keepMine = confirm('另一位剛好也改了同樣的位子：\n\n' + list + (conf.length > 12 ? '\n…等 ' + conf.length + ' 處' : '') + '\n\n按「確定」保留你的版本，按「取消」改用對方的版本。');
+      if (!keepMine) conf.forEach(function(c){ out[c.k] = c.theirs; });
+    }
+    // 還原成座位表結構：桌子順序以雲端為主，自己新增的桌接在後面
+    var ids = [];
+    theirS.tables.concat(mineS.tables).forEach(function(t){ if (ids.indexOf(t.id) < 0 && out['t' + t.id + ':x'] === 1) ids.push(t.id); });
+    var res = { mainPos: out.mainPos === 'stage' ? 'stage' : 'pool', poolSlots: [], tables: [] };
+    for (var i = 0; i < 12; i++) res.poolSlots.push(out['p' + i] === undefined ? null : out['p' + i]);
+    ids.forEach(function(id){
+      var k = 't' + id + ':', n = +out[k + 'n'] || 0, seats = [];
+      for (var j = 0; j < n; j++) seats.push({ name: out[k + 's' + j + 'name'] || '', veg: !!out[k + 's' + j + 'veg'], kid: !!out[k + 's' + j + 'kid'], help: !!out[k + 's' + j + 'help'] });
+      var end = null; try { end = JSON.parse(out[k + 'end'] || 'null'); } catch (e) {}
+      res.tables.push({ id: id, zone: out[k + 'zone'], type: out[k + 'type'], label: out[k + 'label'], seats: seats, slotIdx: out[k + 'slotIdx'] === null ? -1 : out[k + 'slotIdx'], endSeats: end, serve: out[k + 'serve'] || '', spare: out[k + 'spare'] || '' });
+    });
+    return res;
+  }
+  function applySeat(s) {
+    tables = s.tables.map(function(t){ return { id: t.id, zone: t.zone, type: t.type, label: t.label, seats: t.seats, slotIdx: t.slotIdx, endSeats: t.endSeats || undefined, serve: t.serve || '', spare: t.spare || '' }; });
+    for (var p = 0; p < 12; p++) poolSlots[p] = s.poolSlots[p] === undefined ? null : s.poolSlots[p];
+    mainPos = s.mainPos;
+    var mp = document.getElementById(mainPos === 'stage' ? 'mp_stage' : 'mp_pool'); if (mp) mp.checked = true;
+    seq = Math.max.apply(null, [0].concat(tables.map(function(t){ return t.id; })));
+  }
+  function fetchRemote() {
+    return fetch(BASE_URL + '?token=' + encodeURIComponent(TOKEN) + '&action=getSeatData&_=' + Date.now())
+      .then(function(r){ return r.json(); })
+      .then(function(d){ return normSeat(d && d.seat); });
+  }
+  // 把雲端最新版合併進目前畫面；回傳合併後內容
+  function syncFromRemote(remote) {
+    var remoteStr = JSON.stringify(remote);
+    if (BASE === null || remoteStr === BASE) return null;
+    var mine = snap(), baseS = JSON.parse(BASE);
+    var merged = remote.tables.length ? mergeSeat(baseS, mine, remote) : mine;
+    var changedView = JSON.stringify(merged) !== JSON.stringify(mine);
+    BASE = remoteStr;
+    if (changedView) { applySeat(merged); render(); try { refreshTags(); } catch (e) {} setStatus('saved', '↻ 已同步另一位的修改 ' + timeStr()); }
+    return merged;
+  }
   function doSave() {
+    saveTimer = null;
     if (!TOKEN || !LOADED) return;
+    if (SAVING) { scheduleSave(); return; }
+    SAVING = true;
     setStatus('saving', '儲存中…');
-    var payload = { tables: tables, poolSlots: poolSlots, mainPos: mainPos };
+    fetchRemote().then(function(remote){
+      syncFromRemote(remote);
+      var payload = snap();
+      if (JSON.stringify(payload) === BASE) { SAVING = false; setStatus('saved', '✓ 已儲存 ' + timeStr()); return; }
+      return postSeat(payload).then(function(){ BASE = JSON.stringify(payload); SAVING = false; });
+    }).catch(function(e){ SAVING = false; setStatus('error', '儲存失敗：' + e.message + '（稍後會自動重試）'); setTimeout(scheduleSave, 8000); });
+  }
+  function postSeat(payload) {
     var seatStr = JSON.stringify(payload);
     var getUrl = BASE_URL + '?action=saveSeatData&token=' + encodeURIComponent(TOKEN) + '&seat=' + encodeURIComponent(seatStr);
     if (getUrl.length <= 2000) {
-      fetch(getUrl)
-        .then(function(r){ return r.json(); })
-        .then(function(res){
-          if (res && res.success === false) setStatus('error', '⚠️ 未儲存：' + (res.error || '後端拒絕') + '，請重新整理頁面');
-          else setStatus('saved', '✓ 已儲存 ' + timeStr());
-        })
-        .catch(function(e){ setStatus('error', '儲存失敗：' + e.message); });
-    } else {
-      fetch(BASE_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ token: TOKEN, action: 'saveSeatData', seat: payload })
-      })
-      .then(function(){ setStatus('saved', '✓ 已儲存 ' + timeStr()); })
-      .catch(function(e){ setStatus('error', '儲存失敗：' + e.message); });
+      return fetch(getUrl).then(function(r){ return r.json(); }).then(function(res){
+        if (res && res.success === false) setStatus('error', '⚠️ 未儲存：' + (res.error || '後端拒絕') + '，請重新整理頁面');
+        else setStatus('saved', '✓ 已儲存 ' + timeStr());
+      });
     }
+    return fetch(BASE_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ token: TOKEN, action: 'saveSeatData', seat: payload }) })
+      .then(function(){ setStatus('saved', '✓ 已儲存 ' + timeStr()); });
   }
+  // 每 10 秒檢查雲端：有人改過就合併到畫面（正在編輯某桌、或還有修改沒存時先不動畫面）
+  setInterval(function(){
+    if (!TOKEN || !LOADED || SAVING || saveTimer || document.hidden) return;
+    var mask = document.getElementById('mask');
+    if (mask && mask.classList.contains('show')) return;
+    fetchRemote().then(function(remote){ if (!SAVING && !saveTimer) syncFromRemote(remote); }).catch(function(){});
+  }, 10000);
 
   var MAX_STAGE = 4;   // 舞台最多4桌
   var MAX_POOL = 11;   // 水池最多11桌（3欄×4行，格位10留給主桌）
@@ -1058,8 +1149,10 @@ document.addEventListener('DOMContentLoaded', function () {
           mainPos = data.seat.mainPos === 'stage' ? 'stage' : 'pool';
           document.getElementById(mainPos === 'stage' ? 'mp_stage' : 'mp_pool').checked = true;
           render();
+          BASE = JSON.stringify(normSeat(data.seat));
           setStatus('saved', '✓ 已載入上次儲存資料');
         } else {
+          BASE = JSON.stringify(normSeat({ tables: [], poolSlots: [], mainPos: 'pool' }));
           setStatus('saved', '');
         }
         LOADED = true;
